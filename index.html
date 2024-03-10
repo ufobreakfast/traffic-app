@@ -1,48 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Traffic Monitoring</title>
     <style>
-        #map {
-            height: 400px;
-            width: 100%;
-        }
+      #map {
+        height: 400px;
+        width: 100%;
+      }
     </style>
-</head>
-<body>
-    <h1>Traffic Monitoring</h1>
+  </head>
+  <body>
+    <h1>Live traffic updates</h1>
     <div id="map"></div>
-    
+
     <script>
-        // Initialize the map
-        function initMap() {
-            // Center the map on a specific location (e.g., a city)
-            const center = { lat: 37.7749, lng: -122.4194 };
-            const map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 12,
-                center: center,
-            });
+      // Initialize the map
+      function initMap() {
+        // Center the map on a specific location (e.g., a city)
+        const center = { lat: 37.7749, lng: -122.4194 };
+        const map = new google.maps.Map(document.getElementById("map"), {
+          zoom: 12,
+          center: center,
+        });
 
-            // Mock traffic data (e.g., traffic incidents, congestion)
-            const trafficData = [
-                { lat: 37.7802, lng: -122.4313, type: "Accident" },
-                { lat: 37.7596, lng: -122.4268, type: "Congestion" },
-                // Add more traffic data points as needed
-            ];
+        // Add traffic layer to show real-time traffic conditions
+        const trafficLayer = new google.maps.TrafficLayer();
+        trafficLayer.setMap(map);
 
-            // Display traffic data on the map
-            trafficData.forEach((data) => {
-                const marker = new google.maps.Marker({
-                    position: { lat: data.lat, lng: data.lng },
-                    map: map,
-                    title: data.type,
-                });
-            });
-        }
+        // Mock traffic data (e.g., traffic incidents, congestion)
+        const trafficData = [
+          {
+            lat: 37.7802,
+            lng: -122.4313,
+            type: "Accident",
+            description: "Multi-vehicle accident",
+          },
+          {
+            lat: 37.7596,
+            lng: -122.4268,
+            type: "Congestion",
+            description: "Heavy traffic congestion",
+          },
+          // Add more traffic data points as needed
+        ];
+
+        // Display traffic data on the map
+        trafficData.forEach((data) => {
+          const marker = new google.maps.Marker({
+            position: { lat: data.lat, lng: data.lng },
+            map: map,
+            title: data.type,
+          });
+
+          // Add info window for each marker
+          const infoWindow = new google.maps.InfoWindow({
+            content: `<h3>${data.type}</h3><p>${data.description}</p>`,
+          });
+
+          marker.addListener("click", () => {
+            infoWindow.open(map, marker);
+          });
+        });
+
+        // Add traffic camera markers (replace this with actual traffic camera data)
+        const cameraLocations = [
+          { lat: 37.7749, lng: -122.4194 },
+          { lat: 37.785, lng: -122.401 },
+          // Add more camera locations as needed
+        ];
+
+        cameraLocations.forEach((location) => {
+          const cameraMarker = new google.maps.Marker({
+            position: location,
+            map: map,
+            icon: {
+              url: "traffic-camera-icon.png", // Replace this with the URL of your traffic camera icon
+              scaledSize: new google.maps.Size(40, 40),
+            },
+            title: "Traffic Camera",
+          });
+
+          // Add click event listener to display camera feed (replace this with actual logic)
+          cameraMarker.addListener("click", () => {
+            alert("Display live traffic camera feed here");
+            // You can replace the alert with logic to display the live camera feed
+          });
+        });
+
+        // Add search box for location search
+        const input = document.createElement("input");
+        input.setAttribute("placeholder", "Search for location");
+        input.style.marginTop = "10px";
+        map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+
+        const searchBox = new google.maps.places.SearchBox(input);
+        map.addListener("bounds_changed", () => {
+          searchBox.setBounds(map.getBounds());
+        });
+
+        searchBox.addListener("places_changed", () => {
+          const places = searchBox.getPlaces();
+
+          if (places.length === 0) {
+            return;
+          }
+
+          const bounds = new google.maps.LatLngBounds();
+          places.forEach((place) => {
+            if (!place.geometry) {
+              console.log("Returned place contains no geometry");
+              return;
+            }
+            if (place.geometry.viewport) {
+              bounds.union(place.geometry.viewport);
+            } else {
+              bounds.extend(place.geometry.location);
+            }
+          });
+          map.fitBounds(bounds);
+        });
+      }
     </script>
+
     <!-- Include the Google Maps JavaScript API -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
-</body>
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDA4RHa4pmJtmONm9Ut_CYpKq9q3du8s3o&callback=initMap&libraries=places"
+      async
+      defer
+    ></script>
+  </body>
 </html>
